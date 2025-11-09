@@ -4,9 +4,12 @@ Version: 0.1.0
 Summary: Offline-friendly PDF renamer that generates meaningful, keyword-rich filenames from first-page content.
 Home-page: https://github.com/yourname/meaningful-pdf-names
 Author: Your Name
+Author-email: Your Name <your.email@example.com>
 License: MIT
+Project-URL: Homepage, https://github.com/yourname/meaningful-pdf-names
 Project-URL: Source, https://github.com/yourname/meaningful-pdf-names
 Project-URL: Issues, https://github.com/yourname/meaningful-pdf-names/issues
+Keywords: pdf,rename,keywords,offline,cli
 Classifier: Programming Language :: Python :: 3
 Classifier: License :: OSI Approved :: MIT License
 Classifier: Operating System :: OS Independent
