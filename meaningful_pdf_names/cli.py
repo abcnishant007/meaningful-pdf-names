@@ -94,7 +94,10 @@ def extract_text_keywords(pdf_path: Path, max_keywords: int = 5):
         # fallback: original filename as text source
         text = pdf_path.stem
 
-    summarized = summarize_text(text) or text
+    # Clean the text - remove URLs, DOIs, and other noise
+    cleaned_text = clean_extracted_text(text)
+    
+    summarized = summarize_text(cleaned_text) or cleaned_text
 
     # Basic tokenization on summary
     tokens = re.findall(r"[A-Za-z][A-Za-z\-]{1,}", summarized.lower())
@@ -117,6 +120,38 @@ def extract_text_keywords(pdf_path: Path, max_keywords: int = 5):
             ordered.append(t)
 
     return ordered[:max_keywords]
+
+
+def clean_extracted_text(text: str) -> str:
+    """
+    Clean extracted PDF text by removing URLs, DOIs, emails, and other noise.
+    """
+    if not text:
+        return ""
+    
+    # Remove URLs
+    text = re.sub(r'https?://[^\s]+', '', text)
+    text = re.sub(r'www\.[^\s]+', '', text)
+    
+    # Remove DOIs
+    text = re.sub(r'doi:[^\s]+', '', text, flags=re.IGNORECASE)
+    text = re.sub(r'10\.\d{4,9}/[-._;()/:A-Z0-9]+', '', text, flags=re.IGNORECASE)
+    
+    # Remove emails
+    text = re.sub(r'\S+@\S+', '', text)
+    
+    # Remove common PDF metadata patterns
+    text = re.sub(r'received:\s*\d{1,2}\s+\w+\s+\d{4}', '', text, flags=re.IGNORECASE)
+    text = re.sub(r'accepted:\s*\d{1,2}\s+\w+\s+\d{4}', '', text, flags=re.IGNORECASE)
+    text = re.sub(r'published:\s*\d{1,2}\s+\w+\s+\d{4}', '', text, flags=re.IGNORECASE)
+    
+    # Remove page numbers and headers/footers
+    text = re.sub(r'\b\d{1,3}\b', '', text)  # Remove standalone numbers (likely page numbers)
+    
+    # Remove excessive whitespace
+    text = re.sub(r'\s+', ' ', text).strip()
+    
+    return text
 
 
 def slugify_keywords(keywords):
