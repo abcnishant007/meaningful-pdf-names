@@ -1,0 +1,13 @@
+LICENSE
+README.md
+pyproject.toml
+setup.cfg
+meaningful_pdf_names/__init__.py
+meaningful_pdf_names/__main__.py
+meaningful_pdf_names/cli.py
+meaningful_pdf_names.egg-info/PKG-INFO
+meaningful_pdf_names.egg-info/SOURCES.txt
+meaningful_pdf_names.egg-info/dependency_links.txt
+meaningful_pdf_names.egg-info/entry_points.txt
+meaningful_pdf_names.egg-info/requires.txt
+meaningful_pdf_names.egg-info/top_level.txt

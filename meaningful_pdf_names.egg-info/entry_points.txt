@@ -1,0 +1,3 @@
+[console_scripts]
+meaningful-pdf-names = meaningful_pdf_names.cli:main
+mpn = meaningful_pdf_names.cli:main
