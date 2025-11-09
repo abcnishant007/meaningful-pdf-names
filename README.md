@@ -1,5 +1,11 @@
 # meaningful-pdf-names
 
+[![Python application](https://img.shields.io/badge/Python-3.9+-blue.svg)](https://www.python.org)
+[![PyPI version](https://img.shields.io/pypi/v/meaningful-pdf-names.svg)](https://pypi.org/project/meaningful-pdf-names/)
+[![codecov](https://codecov.io/gh/abcnishant007/meaningful-pdf-names/branch/main/graph/badge.svg)](https://codecov.io/gh/abcnishant007/meaningful-pdf-names)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Downloads](https://static.pepy.tech/badge/meaningful-pdf-names)](https://pepy.tech/projects/meaningful-pdf-names)
+
 Offline-friendly CLI to turn your messy paper filenames into **compact, keyword-rich names** based on the PDF's first page.
 
 Example:
