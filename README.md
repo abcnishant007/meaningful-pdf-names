@@ -28,18 +28,6 @@ Example:
 pip install meaningful-pdf-names
 ```
 
-### With optional local summarizer:
-
-```bash
-pip install "meaningful-pdf-names[summarizer]"
-```
-
-### From source (development):
-
-```bash
-pip install git+https://github.com/abcnishant007/meaningful-pdf-names.git
-```
-
 ## Quick Start Guide
 
 ### For Mac Users
