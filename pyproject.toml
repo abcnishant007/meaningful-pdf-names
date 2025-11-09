@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "meaningful-pdf-names"
-version = "0.1.0"
+version = "0.1.1"
 description = "Offline-friendly PDF renamer that generates meaningful, keyword-rich filenames from first-page content."
 authors = [
     {name = "Nishant Kumar", email = "abcnishant007@gmail.com"}
