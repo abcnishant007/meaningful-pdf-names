@@ -7,7 +7,7 @@ name = "meaningful-pdf-names"
 version = "0.1.0"
 description = "Offline-friendly PDF renamer that generates meaningful, keyword-rich filenames from first-page content."
 authors = [
-    {name = "Your Name", email = "your.email@example.com"}
+    {name = "Nishant Kumar", email = "abcnishant007@gmail.com"}
 ]
 readme = "README.md"
 license = {text = "MIT"}
@@ -31,9 +31,9 @@ summarizer = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/yourname/meaningful-pdf-names"
-Source = "https://github.com/yourname/meaningful-pdf-names"
-Issues = "https://github.com/yourname/meaningful-pdf-names/issues"
+Homepage = "https://github.com/abcnishant007/meaningful-pdf-names"
+Source = "https://github.com/abcnishant007/meaningful-pdf-names"
+Issues = "https://github.com/abcnishant007/meaningful-pdf-names/issues"
 
 [project.scripts]
 meaningful-pdf-names = "meaningful_pdf_names.cli:main"
