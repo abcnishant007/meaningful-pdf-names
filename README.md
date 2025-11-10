@@ -14,7 +14,8 @@ Example:
 
 ## Features
 
-- Uses only the **first page** (title, authors, abstract region) for speed
+- Uses the **first 2 pages** by default (title, authors, abstract, introduction) for better context
+- Configurable page count with `-p` flag (e.g., `-p 4` for 4 pages)
 - Up to **5 meaningful keywords** per file
 - Adds a **3-character [a-z0-9] suffix** to avoid collisions
 - Works fully **offline** with `pypdf`
@@ -89,6 +90,12 @@ mpn . --dry-run
 **Quiet mode (minimal output):**
 ```bash
 mpn . --quiet
+```
+
+**Custom page count (read more pages for better context):**
+```bash
+mpn . -p 4          # Read first 4 pages
+mpn . -p 10         # Read up to 10 pages (or all if PDF has fewer)
 ```
 
 ## What It Does

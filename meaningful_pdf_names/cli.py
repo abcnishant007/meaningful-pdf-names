@@ -75,18 +75,27 @@ def summarize_text(text: str, max_chars: int = 4000) -> str:
         return text
 
 
-def extract_text_keywords(pdf_path: Path, max_keywords: int = 5):
+def extract_text_keywords(pdf_path: Path, max_keywords: int = 5, pages_to_read: int = 2):
     """
-    Extract up to `max_keywords` from ONLY the first page of the PDF.
+    Extract up to `max_keywords` from the first `pages_to_read` pages of the PDF.
+    If `pages_to_read` exceeds total pages, reads all available pages.
     """
     text = ""
 
     if PdfReader is not None:
         try:
             reader = PdfReader(str(pdf_path))
-            if len(reader.pages) > 0:
-                first_page = reader.pages[0]
-                text = (first_page.extract_text() or "")
+            total_pages = len(reader.pages)
+            if total_pages > 0:
+                # Determine how many pages to actually read
+                pages_to_extract = min(pages_to_read, total_pages)
+                
+                # Extract text from the first N pages
+                for i in range(pages_to_extract):
+                    page = reader.pages[i]
+                    page_text = (page.extract_text() or "").strip()
+                    if page_text:
+                        text += page_text + " "
         except Exception:
             text = ""
 
@@ -205,9 +214,9 @@ def unique_target_path(folder: Path, base_slug: str, suffix_len: int = 3) -> Pat
             return candidate
 
 
-def rename_pdfs(folder: Path, dry_run: bool = False, verbose: bool = True):
+def rename_pdfs(folder: Path, dry_run: bool = False, verbose: bool = True, pages_to_read: int = 2):
     """
-    Rename all PDFs in the folder using first-page-based keywords.
+    Rename all PDFs in the folder using text from the first `pages_to_read` pages.
     """
     if not folder.is_dir():
         raise ValueError(f"{folder} is not a directory")
@@ -221,7 +230,7 @@ def rename_pdfs(folder: Path, dry_run: bool = False, verbose: bool = True):
         print(f"Found {len(pdf_files)} PDF(s) in {folder}")
 
     for pdf in pdf_files:
-        keywords = extract_text_keywords(pdf)
+        keywords = extract_text_keywords(pdf, pages_to_read=pages_to_read)
         base_slug = build_new_name(keywords)
         target = unique_target_path(folder, base_slug)
 
@@ -240,7 +249,7 @@ def rename_pdfs(folder: Path, dry_run: bool = False, verbose: bool = True):
 def main():
     parser = argparse.ArgumentParser(
         description=(
-            "Rename PDFs using first-page-derived keywords plus a short suffix "
+            "Rename PDFs using text-derived keywords plus a short suffix "
             "for clean, meaningful filenames."
         )
     )
@@ -248,6 +257,13 @@ def main():
         "folder",
         type=str,
         help="Path to folder containing PDFs."
+    )
+    parser.add_argument(
+        "-p", "--pages",
+        type=int,
+        default=2,
+        help="Number of pages to read from each PDF (default: 2). "
+             "If larger than total pages, reads all available pages."
     )
     parser.add_argument(
         "--dry-run",
@@ -263,7 +279,7 @@ def main():
     args = parser.parse_args()
     folder = Path(args.folder).expanduser().resolve()
 
-    rename_pdfs(folder, dry_run=args.dry_run, verbose=not args.quiet)
+    rename_pdfs(folder, dry_run=args.dry_run, verbose=not args.quiet, pages_to_read=args.pages)
 
 
 if __name__ == "__main__":

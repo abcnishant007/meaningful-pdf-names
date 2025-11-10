@@ -1,7 +1,6 @@
 LICENSE
 README.md
 pyproject.toml
-setup.cfg
 meaningful_pdf_names/__init__.py
 meaningful_pdf_names/__main__.py
 meaningful_pdf_names/cli.py

@@ -2,10 +2,14 @@
 requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
+[tool.setuptools.packages.find]
+where = ["."]
+exclude = ["test_data*"]
+
 [project]
 name = "meaningful-pdf-names"
-version = "0.1.1"
-description = "Offline-friendly PDF renamer that generates meaningful, keyword-rich filenames from first-page content."
+version = "0.1.2"
+description = "Offline-friendly PDF renamer that generates meaningful, keyword-rich filenames from PDF content."
 authors = [
     {name = "Nishant Kumar", email = "abcnishant007@gmail.com"}
 ]
