@@ -1,3 +1,6 @@
+**Mac users:** If you just want the ready-to-use macOS installer (right-click integration, no terminal required), head to [Meaningful PDF Names — macOS DMG Release](https://github.com/abcnishant007/meaningful-pdf-names-distribution/releases/tag/Version-0.2.0).
+
+
 # meaningful-pdf-names
 
 [![Python application](https://img.shields.io/badge/Python-3.9+-blue.svg)](https://www.python.org)
