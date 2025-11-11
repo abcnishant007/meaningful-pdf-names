@@ -214,7 +214,34 @@ def unique_target_path(folder: Path, base_slug: str, suffix_len: int = 3) -> Pat
             return candidate
 
 
-def rename_pdfs(folder: Path, dry_run: bool = False, verbose: bool = True, pages_to_read: int = 2):
+def rename_pdf_file(pdf_path: Path, dry_run: bool = False, verbose: bool = True, pages_to_read: int = 2):
+    """
+    Rename a single PDF file using text from the first `pages_to_read` pages.
+    """
+    if not pdf_path.is_file():
+        raise ValueError(f"{pdf_path} is not a file")
+    
+    if pdf_path.suffix.lower() != ".pdf":
+        raise ValueError(f"{pdf_path} is not a PDF file")
+
+    folder = pdf_path.parent
+    keywords = extract_text_keywords(pdf_path, pages_to_read=pages_to_read)
+    base_slug = build_new_name(keywords)
+    target = unique_target_path(folder, base_slug)
+
+    if target.name == pdf_path.name:
+        if verbose:
+            print(f"Skip (already well-named): {pdf_path.name}")
+        return
+
+    if verbose:
+        print(f"{pdf_path.name} -> {target.name}")
+
+    if not dry_run:
+        pdf_path.rename(target)
+
+
+def rename_pdfs_in_folder(folder: Path, dry_run: bool = False, verbose: bool = True, pages_to_read: int = 2):
     """
     Rename all PDFs in the folder using text from the first `pages_to_read` pages.
     """
@@ -230,20 +257,35 @@ def rename_pdfs(folder: Path, dry_run: bool = False, verbose: bool = True, pages
         print(f"Found {len(pdf_files)} PDF(s) in {folder}")
 
     for pdf in pdf_files:
-        keywords = extract_text_keywords(pdf, pages_to_read=pages_to_read)
-        base_slug = build_new_name(keywords)
-        target = unique_target_path(folder, base_slug)
+        rename_pdf_file(pdf, dry_run=dry_run, verbose=verbose, pages_to_read=pages_to_read)
 
-        if target.name == pdf.name:
+
+def rename_pdfs(paths: list, dry_run: bool = False, verbose: bool = True, pages_to_read: int = 2):
+    """
+    Rename PDFs from the given paths (can be files or folders).
+    """
+    processed_files = 0
+    
+    for path_str in paths:
+        path = Path(path_str).expanduser().resolve()
+        
+        if path.is_file():
+            if path.suffix.lower() == ".pdf":
+                rename_pdf_file(path, dry_run=dry_run, verbose=verbose, pages_to_read=pages_to_read)
+                processed_files += 1
+            else:
+                if verbose:
+                    print(f"Skipping non-PDF file: {path.name}")
+        elif path.is_dir():
+            pdf_files_before = len(list(path.glob("*.pdf")))
+            rename_pdfs_in_folder(path, dry_run=dry_run, verbose=verbose, pages_to_read=pages_to_read)
+            processed_files += pdf_files_before
+        else:
             if verbose:
-                print(f"Skip (already well-named): {pdf.name}")
-            continue
-
-        if verbose:
-            print(f"{pdf.name} -> {target.name}")
-
-        if not dry_run:
-            pdf.rename(target)
+                print(f"Skipping non-existent path: {path}")
+    
+    if verbose and processed_files == 0:
+        print("No PDF files found to process.")
 
 
 def main():
@@ -254,9 +296,11 @@ def main():
         )
     )
     parser.add_argument(
-        "folder",
+        "paths",
+        nargs="+",
         type=str,
-        help="Path to folder containing PDFs."
+        help="Paths to PDF files or folders containing PDFs. "
+             "Can specify multiple files/folders separated by spaces."
     )
     parser.add_argument(
         "-p", "--pages",
@@ -277,9 +321,8 @@ def main():
     )
 
     args = parser.parse_args()
-    folder = Path(args.folder).expanduser().resolve()
 
-    rename_pdfs(folder, dry_run=args.dry_run, verbose=not args.quiet, pages_to_read=args.pages)
+    rename_pdfs(args.paths, dry_run=args.dry_run, verbose=not args.quiet, pages_to_read=args.pages)
 
 
 if __name__ == "__main__":

@@ -82,9 +82,27 @@ mpn ~/Downloads/research_papers
 mpn /Users/username/Documents/PDFs
 ```
 
+**Single PDF file:**
+```bash
+mpn document.pdf
+mpn ~/Downloads/paper.pdf
+```
+
+**Multiple PDF files:**
+```bash
+mpn paper1.pdf paper2.pdf paper3.pdf
+mpn ~/Downloads/*.pdf
+```
+
+**Mixed files and folders:**
+```bash
+mpn . document.pdf ~/Downloads/research_papers
+```
+
 **Dry run (preview changes without renaming):**
 ```bash
 mpn . --dry-run
+mpn document.pdf --dry-run
 ```
 
 **Quiet mode (minimal output):**
@@ -96,6 +114,7 @@ mpn . --quiet
 ```bash
 mpn . -p 4          # Read first 4 pages
 mpn . -p 10         # Read up to 10 pages (or all if PDF has fewer)
+mpn document.pdf -p 3  # Read first 3 pages of specific file
 ```
 
 ## What It Does
