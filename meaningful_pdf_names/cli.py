@@ -3,11 +3,17 @@ import random
 import string
 import re
 from pathlib import Path
+from typing import Tuple
 
 try:
     from pypdf import PdfReader
 except ImportError:
     PdfReader = None
+
+try:
+    from pdfminer.high_level import extract_text as pdfminer_extract_text
+except ImportError:
+    pdfminer_extract_text = None
 
 try:
     from transformers import pipeline
@@ -75,33 +81,112 @@ def summarize_text(text: str, max_chars: int = 4000) -> str:
         return text
 
 
+def is_bad_text(text: str) -> bool:
+    """
+    Heuristic detector for low-quality extraction output.
+    """
+    if not text:
+        return True
+
+    normalized = re.sub(r"\s+", " ", text).strip()
+    if len(normalized) < 80:
+        return True
+
+    word_tokens = re.findall(r"[A-Za-z]{3,}", normalized)
+    if len(word_tokens) < 12:
+        return True
+
+    weird_chars = re.findall(r"[^\w\s\.,;:!?'\-\(\)\[\]/&%$#@]", normalized)
+    if len(weird_chars) / max(len(normalized), 1) > 0.08:
+        return True
+
+    replacement_count = normalized.count("\ufffd")
+    if replacement_count / max(len(normalized), 1) > 0.005:
+        return True
+
+    unique_words = {w.lower() for w in word_tokens}
+    if len(unique_words) / max(len(word_tokens), 1) < 0.25:
+        return True
+
+    return False
+
+
+def _extract_with_pypdf(pdf_path: Path, pages_to_read: int) -> Tuple[str, object]:
+    if PdfReader is None:
+        return "", None
+    try:
+        reader = PdfReader(str(pdf_path))
+        total_pages = len(reader.pages)
+        text_parts = []
+        if total_pages > 0:
+            pages_to_extract = min(pages_to_read, total_pages)
+            for i in range(pages_to_extract):
+                page_text = (reader.pages[i].extract_text() or "").strip()
+                if page_text:
+                    text_parts.append(page_text)
+        return " ".join(text_parts), reader
+    except Exception:
+        return "", None
+
+
+def _extract_with_pdfminer(pdf_path: Path, pages_to_read: int) -> str:
+    if pdfminer_extract_text is None:
+        return ""
+    try:
+        page_numbers = list(range(max(pages_to_read, 1)))
+        return (pdfminer_extract_text(str(pdf_path), page_numbers=page_numbers) or "").strip()
+    except Exception:
+        return ""
+
+
+def _extract_metadata_text(reader: object) -> str:
+    if reader is None:
+        return ""
+    try:
+        metadata = getattr(reader, "metadata", None) or {}
+        fields = []
+        for key in ("/Title", "/Subject", "/Author", "/Keywords"):
+            value = metadata.get(key)
+            if value:
+                fields.append(str(value))
+        return " ".join(fields).strip()
+    except Exception:
+        return ""
+
+
+def extract_text_with_fallback(pdf_path: Path, pages_to_read: int = 2) -> Tuple[str, str]:
+    """
+    Extraction order:
+    pypdf -> pdfminer.six -> metadata -> filename fallback.
+    """
+    pypdf_text, reader = _extract_with_pypdf(pdf_path, pages_to_read=pages_to_read)
+    if not is_bad_text(pypdf_text):
+        return pypdf_text, "pypdf"
+
+    pdfminer_text = _extract_with_pdfminer(pdf_path, pages_to_read=pages_to_read)
+    if not is_bad_text(pdfminer_text):
+        return pdfminer_text, "pdfminer.six"
+
+    metadata_text = _extract_metadata_text(reader)
+    if not is_bad_text(metadata_text):
+        return metadata_text, "metadata"
+
+    return pdf_path.stem, "filename fallback"
+
+
 def extract_text_keywords(pdf_path: Path, max_keywords: int = 5, pages_to_read: int = 2):
     """
     Extract up to `max_keywords` from the first `pages_to_read` pages of the PDF.
     If `pages_to_read` exceeds total pages, reads all available pages.
     """
-    text = ""
+    text, _ = extract_text_with_fallback(pdf_path, pages_to_read=pages_to_read)
+    return extract_keywords_from_text(text, pdf_path=pdf_path, max_keywords=max_keywords)
 
-    if PdfReader is not None:
-        try:
-            reader = PdfReader(str(pdf_path))
-            total_pages = len(reader.pages)
-            if total_pages > 0:
-                # Determine how many pages to actually read
-                pages_to_extract = min(pages_to_read, total_pages)
-                
-                # Extract text from the first N pages
-                for i in range(pages_to_extract):
-                    page = reader.pages[i]
-                    page_text = (page.extract_text() or "").strip()
-                    if page_text:
-                        text += page_text + " "
-        except Exception:
-            text = ""
 
-    if not text.strip():
-        # fallback: original filename as text source
-        text = pdf_path.stem
+def extract_keywords_from_text(text: str, pdf_path: Path, max_keywords: int = 5):
+    """
+    Convert extracted text into keyword tokens.
+    """
 
     # Clean the text - remove URLs, DOIs, and other noise
     cleaned_text = clean_extracted_text(text)
@@ -225,7 +310,8 @@ def rename_pdf_file(pdf_path: Path, dry_run: bool = False, verbose: bool = True,
         raise ValueError(f"{pdf_path} is not a PDF file")
 
     folder = pdf_path.parent
-    keywords = extract_text_keywords(pdf_path, pages_to_read=pages_to_read)
+    extracted_text, extractor_used = extract_text_with_fallback(pdf_path, pages_to_read=pages_to_read)
+    keywords = extract_keywords_from_text(extracted_text, pdf_path=pdf_path)
     base_slug = build_new_name(keywords)
     target = unique_target_path(folder, base_slug)
 
@@ -235,6 +321,8 @@ def rename_pdf_file(pdf_path: Path, dry_run: bool = False, verbose: bool = True,
         return
 
     if verbose:
+        if dry_run:
+            print(f"[extractor: {extractor_used}] {pdf_path.name}")
         print(f"{pdf_path.name} -> {target.name}")
 
     if not dry_run:

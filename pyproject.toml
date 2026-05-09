@@ -25,7 +25,8 @@ classifiers = [
 ]
 requires-python = ">=3.9"
 dependencies = [
-    "pypdf>=5.0.0"
+    "pypdf>=5.0.0",
+    "pdfminer.six>=20250506"
 ]
 
 [project.optional-dependencies]

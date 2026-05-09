@@ -21,7 +21,7 @@ Example:
 - Configurable page count with `-p` flag (e.g., `-p 4` for 4 pages)
 - Up to **5 meaningful keywords** per file
 - Adds a **3-character [a-z0-9] suffix** to avoid collisions
-- Works fully **offline** with `pypdf`
+- Works fully **offline** with `pypdf` + `pdfminer.six` fallback
 - Optional: use a small local Hugging Face summarizer
   (`sshleifer/distilbart-cnn-12-6`) via `transformers` + `torch`
 
@@ -123,7 +123,8 @@ mpn document.pdf -p 3  # Read first 3 pages of specific file
 ## What It Does
 
 - Scans all PDF files in the specified folder
-- Extracts text from just the first page (fast!)
+- Extracts text from first pages (`-p`, default 2) with quality checks
+- Fallback order: `pypdf` -> `pdfminer.six` -> PDF metadata -> filename stem
 - Identifies meaningful keywords from titles, authors, abstracts
 - Generates clean, readable filenames like:
   - `climate-change-urban-planning-sustainability-a9f.pdf`
